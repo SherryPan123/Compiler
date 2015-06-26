@@ -1,0 +1,12 @@
+sub id (id as integer)
+if a<b
+then 
+while
+asdf > 34
+do
+while xxx==ds
+do call id (mmm);
+ 
+else input ccc,ccc;
+
+end sub

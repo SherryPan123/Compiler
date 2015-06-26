@@ -1,0 +1,6 @@
+//*/123.12.34 dkfjdlk.089// 0089
++ = - <= > <> >< == 
+begin  as sub end 6if then else 2 call
+while
+do integer float input output var
+or and

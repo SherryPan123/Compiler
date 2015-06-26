@@ -1,0 +1,2 @@
+sub aaa (kdj as floatt,kdj as integer)
+end sub
