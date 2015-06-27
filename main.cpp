@@ -7,8 +7,8 @@ char Keyword[20][10] = { "begin", "as", "sub", "end", "if", "then", "else", "cal
 //bool运算符
 char Boolop[2][5] = { "and", "or" };
 
-//vector<comtab> ;//每层都为一个符号表
-
+vector<comtab> comtabs; //变量表
+vector<funtab> funtabs; //函数表
 
 FILE * fin;
 int isright;

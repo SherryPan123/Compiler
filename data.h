@@ -70,7 +70,14 @@ extern int getToken();
 
 struct comtab{			//符号表
 	char name[MAXIDLEN + 1];
-	bool used;
+	int type;//数据类型
+	int funid;//第几个函数
+	//bool used;
+	comtab(char s[], int f){
+		strcpy(name, s);
+		funid = f;
+		//used = true;
+	}
 };
 
 
@@ -78,13 +85,17 @@ struct Val{					//
 	int value1;
 	double value2;
 	int  type;  // 1：表示value中保存的是标识符在符号表中的索引；
-	// 0：表示value中保存的是常量值；
+	// 0：表示value中保存的是整数值；
+	//2：表示value中保存的是小数
 	//-1：表示value中保存的是临时变量序号；
 };
 
 struct funtab{		//函数声明表
 	char name[MAXIDLEN + 1]; //函数名
 	int paranum;	//参数个数
-	int para[MAXPARANUM];//参数类型
-	int returnval;//返回值类型
+	vector<int> para;//参数类型
+	//int returnval;//返回值类型
+	funtab(char tname[]){
+		strcpy(name, tname);
+	}
 };

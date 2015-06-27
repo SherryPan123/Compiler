@@ -1,12 +1,22 @@
-sub id (id as integer)
-if a<b
-then 
-while
-asdf > 34
-do
-while xxx==ds
-do call id (mmm);
- 
-else input ccc,ccc;
-
+sub func1 (a as integer,c as float,b as integer)
+	if a<b 
+	then 
+		begin
+			var asdf, func11 as integer;,
+			while asdf > 34 do
+				begin
+					var xxx as float;,
+					while xxx==c do
+						call id (a);
+				end
+		end
+	else
+		begin
+			var ccc as integer;,
+			input ccc,ccc;
+		end
+end sub
+sub func1()
+end sub
+sub func2()
 end sub

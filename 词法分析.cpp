@@ -109,43 +109,31 @@ int _getToken()//词法分析函数
 		else if (ch == '+')
 		{
 			tokeType = plus;
-			token[0] = ch;          //将截取到的字符串存入token数组
-			token[1] = '\0';
 		}
 		else if (ch == '-')
 		{
 			tokeType = minus;
-			token[0] = ch;          //将截取到的字符串存入token数组
-			token[1] = '\0';
+			
 		}
 		else if (ch == '*')
 		{
 			tokeType = mutiply;
-			token[0] = ch;         //将截取到的字符串存入token数组
-			token[1] = '\0';
 		}
 		else if (ch == '/')
 		{
-			int j = 0;
-			token[j++] = ch;
 			ch = getnext();
 			if (ch == '/'){
 				tokeType = singlenote;
-				token[j++] = ch;
 				while (ch != '\n' && ch != EOF){
 					ch = getnext();
-					token[j++] = ch;
 				}
 				if (ch == '\n'){
 					row++;
 					col = 0;
 				}
-				token[j] = '\0';
-				//printf("注释的内容：%s\n", token);
 			}
 			else if (ch == '*'){
 				tokeType = mulnote;
-				token[j++] = ch;
 				while (ch != EOF){
 					if (ch == '*'){
 						ch = getnext();
@@ -157,11 +145,9 @@ int _getToken()//词法分析函数
 						col = 0;
 					}
 				}
-				token[j] = '\0';
 			}
 			else{
 				tokeType = div;
-				token[j] = '\0';
 
 				if (ch != EOF){
 					fseek(fin, -1, 1);   //回退一个字符 
@@ -172,18 +158,12 @@ int _getToken()//词法分析函数
 		}
 		else if (ch == '=')
 		{
-			int j = 0;
-			token[j++] = ch;
 			ch = getnext();
 			if (ch == '='){
 				tokeType = equlequl;
-				token[j++] = ch;
-				token[j] = '\0';
 			}
 			else{
 				tokeType = equl;
-				
-				token[j] = '\0';
 
 				if (ch != EOF){
 					fseek(fin, -1, 1);   //回退一个字符 
@@ -194,23 +174,15 @@ int _getToken()//词法分析函数
 		}
 		else if (ch == '<')
 		{
-			int j = 0;
-			token[j++] = ch;
 			ch = getnext();
 			if (ch == '='){
 				tokeType = lessequl;
-				token[j++] = ch;
-				token[j] = '\0';
 			}
 			else if (ch == '>'){
 				tokeType = notequl;
-				token[j++] = ch;
-				token[j] = '\0';
 			}
 			else {
 				tokeType = lessthan;
-				token[j] = '\0';
-
 				if (ch != EOF){
 					fseek(fin, -1, 1);   //回退一个字符 
 					col--;
@@ -219,17 +191,12 @@ int _getToken()//词法分析函数
 		}
 		else if (ch == '>')
 		{
-			int j = 0;
-			token[j++] = ch;
 			ch = getnext();
 			if (ch == '='){
 				tokeType = moreequl;
-				token[j++] = ch;
-				token[j] = '\0';
 			}
 			else{
 				tokeType = morethan;
-				token[j] = '\0';
 
 				if (ch != EOF){
 					fseek(fin, -1, 1);   //回退一个字符 
@@ -240,26 +207,18 @@ int _getToken()//词法分析函数
 		else if (ch == '(')
 		{
 			tokeType = LP;
-			token[0] = ch;         //将截取到的字符串存入token数组
-			token[1] = '\0';
 		}
 		else if (ch == ')')
 		{
 			tokeType = RP;
-			token[0] = ch;          //将截取到的字符串存入token数组
-			token[1] = '\0';
 		}
 		else if (ch == ',')
 		{
 			tokeType = comma;
-			token[0] = ch;          //将截取到的字符串存入token数组
-			token[1] = '\0';
 		}
 		else if (ch == ';')
 		{
 			tokeType = semicolon;
-			token[0] = ch;          //将截取到的字符串存入token数组
-			token[1] = '\0';
 		}
 		else
 		{

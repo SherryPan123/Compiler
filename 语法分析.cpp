@@ -2,7 +2,15 @@
 
 extern char* err_msg[];
 
-extern int prerow, precol;  //出错前的行号、列号
+
+extern vector<comtab> comtabs; //变量表
+extern vector<funtab> funtabs; //函数表
+
+extern char token[];
+extern bool enter(char name[]);
+extern bool isexist(char name[]);
+
+int curfunc;
 
 void program();//1.程序  
 void func();//2.过程   +fun
@@ -10,7 +18,7 @@ void parameter();//3.参数列表   +var
 void statementlists();//4.语句
 void complexStatementlists();//5.复合语句
 void varDefinition();//6.变量定义语句  +var
-void datatype();//7.数据类型
+int datatype();//7.数据类型
 void inputStatement();//8.输入语句
 void outputStatement();//9.输出语句
 void assignment();//10.赋值语句
@@ -25,13 +33,7 @@ void booleaexpression();//18.布尔表达式
 void relationexpression();//19.关系表达式
 void relation();//20.关系
 
-
-void error(int n) {
-	printf("行号：%d  列号：%d  %s\n", prerow,precol,err_msg[n]);
-	fclose(fin);
-	getchar();
-	exit(0);
-}
+extern void error(int n);
 
 void advance() {
 	lookahead = getToken();
@@ -64,7 +66,20 @@ void program(){
 void func(){
 	match(sub);
 	
+	char funname[MAXIDLEN];
+	strcpy(funname, token);
+	
 	match(id);
+	//在表中插入定义的函数名
+	if (!enter(funname)){
+		strcpy(token, funname);
+		error(49);
+	}
+	//添加函数声明表
+
+	funtabs.push_back(funtab(funname));
+	//current function = funtabs.size()-1;
+	curfunc = funtabs.size() - 1;
 
 	parameter();
 
@@ -80,24 +95,46 @@ void parameter(){
 	if (lookahead == LP){
 		match(LP);
 
+		char tmpname[MAXIDLEN];
+		strcpy(tmpname, token);
+
 		match(id);
 		//在表中插入定义的变量
+		if (!enter(tmpname)){
+			strcpy(token, tmpname);
+			error(47);
+		}
+
 		match(as);
 
-		datatype();
-
+		int tmptype = datatype();
+		comtabs.back().type = tmptype;
+		comtabs.back().funid = curfunc;
+		funtabs.back().para.push_back(tmptype);
+		
 		while (lookahead == comma){
 			
 			match(comma);
-
+			
+			strcpy(tmpname, token);
+			
 			match(id);
+			//在表中插入定义的变量
+			if (!enter(tmpname)){
+				strcpy(token, tmpname);
+				error(47);
+			}
 
 			match(as);
 
-			datatype();
+			int tmptype = datatype();
+			comtabs.back().type = tmptype;
+			comtabs.back().funid = curfunc;
+			funtabs.back().para.push_back(tmptype);
 		}
 
 		match(RP);
+
 	}
 }
 /*
@@ -164,49 +201,76 @@ void complexStatementlists(){
 //6.<变量定义语句>—> var id [ , id ] as <数据类型> ；
 void varDefinition(){
 	match(var);
+	char varname[MAXIDLEN];
+	strcpy(varname, token);
 
 	match(id);
+
+	int cnt = 1;
+	if (!enter(varname)){
+		strcpy(token, varname);
+		error(47);
+	}
+
 
 	while (lookahead == comma){
 		match(comma);
 
+		strcpy(varname, token);
 		match(id);
+		cnt++;
+		if (!enter(varname)){
+			strcpy(token,varname);
+			error(47);
+		}
 	}
 	match(as);
 
-	datatype();
+	int typetmp = datatype();
+	for (int i = 1; i <= cnt; i++){
+		comtabs[comtabs.size() - i].type = typetmp;
+	}
 
 	match(semicolon);
 }
 
 //7.<数据类型>—> integer | float
-void datatype(){
-
+int datatype(){
 	if (lookahead == INTEGER){
-		
-		//此处在表中添加/返回数据类型
-
 		advance();
+		return INTEGER;
+
 	}
 	else if (lookahead == FLOAT){
-
-		//此处在表中添加/返回数据类型
-
 		advance();
+		return FLOAT;
 	}
 	else{
 		match(INTEGER);		//出错信息
+		return -1;
 	}
 }
 
 //8.<输入语句>—> input  id  [ , id ] ；
 void inputStatement(){
 	match(input);
+
+	char varname[MAXIDLEN];
+	strcpy(varname, token);
 	match(id);
+	if (!isexist(varname)){
+		strcpy(token, varname);
+		error(46);
+	}
 
 	while (lookahead == comma){
 		match(comma);
+		strcpy(varname, token);
 		match(id);
+		if (!isexist(varname)){
+			strcpy(token, varname);
+			error(46);
+		}
 	}
 	match(semicolon);
 }
@@ -225,6 +289,9 @@ void outputStatement(){
 //10.<赋值语句>—> id  =  <表达式> ；
 void assignment(){
 	match(id);
+	if (!isexist(token)){
+		error(46);
+	}
 	match(equl);
 	expression();
 }
@@ -232,7 +299,7 @@ void assignment(){
 //11.<函数调用语句>—> call id (  <传递参数>  ) ；
 void functioncall(){
 	match(call);
-	match(id);
+	match(id);  //函数名
 	match(LP);
 	passparameter();
 	match(RP);
@@ -244,7 +311,14 @@ void passparameter(){
 	if (match(id)){
 		while (lookahead == comma){
 			match(comma);
+
+			char varname[MAXIDLEN];
+			strcpy(varname, token);
 			match(id);
+			if (!isexist(varname)){
+				strcpy(token, varname);
+				error(46);
+			}
 		}
 	}
 }
@@ -298,7 +372,13 @@ void Item(){
 //17.<因子>—> id | con | deci | (<表达式>)
 void Factor(){
 	if (lookahead == id){
+		char varname[MAXIDLEN];
+		strcpy(varname, token);
 		match(id);
+		if (!isexist(varname)){
+			strcpy(token, varname);
+			error(46);
+		}
 	}
 	else if (lookahead == con){
 		match(con);

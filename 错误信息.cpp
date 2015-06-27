@@ -1,5 +1,8 @@
 #include "data.h"
 
+extern char token[];
+extern int prerow, precol;  //出错前的行号、列号
+
 char* err_msg[] =
 {
 	/*  0 */    "",
@@ -48,6 +51,20 @@ char* err_msg[] =
 	/* 43 */	"缺少：output，或output拼写错误！",
 	/* 44 */	"缺少：var，或var拼写错误！",
 	/* 45 */	"缺少：do，或do拼写错误！",
-	/* 46 */	"",
-	/* 47 */	"",
+	/* 46 */	"变量未定义",
+	/* 47 */	"变量重复定义",
+	/* 48 */	"函数未定义",
+	/* 49 */	"函数重复定义",
 };
+
+void error(int n) {
+	if (n == 46 || n == 47) {
+		printf("行号：%d  列号：%d  %s %s\n", prerow, precol, token, err_msg[n]);
+	}
+	else {
+		printf("行号：%d  列号：%d  %s\n", prerow, precol, err_msg[n]);
+	}
+	fclose(fin);
+	getchar();
+	exit(0);
+}
