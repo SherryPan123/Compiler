@@ -56,7 +56,8 @@ using namespace std;
 #define input					42
 #define output					43
 #define var						44
-	
+#define FUN						45	
+
 #define MAXIDLEN 15		//标识符最大长度
 #define MAXPARANUM 10	//函数参数最大个数
 

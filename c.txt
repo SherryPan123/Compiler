@@ -1,3 +1,5 @@
+sub func2(a as integer)
+end sub
 sub func1 (a as integer,c as float,b as integer)
 	if a<b 
 	then 
@@ -7,7 +9,7 @@ sub func1 (a as integer,c as float,b as integer)
 				begin
 					var xxx as float;,
 					while xxx==c do
-						call id (a);
+						call func2 (xxx);
 				end
 		end
 	else
@@ -17,6 +19,4 @@ sub func1 (a as integer,c as float,b as integer)
 		end
 end sub
 sub func1()
-end sub
-sub func2()
 end sub

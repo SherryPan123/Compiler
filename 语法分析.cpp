@@ -9,6 +9,9 @@ extern vector<funtab> funtabs; //函数表
 extern char token[];
 extern bool enter(char name[]);
 extern bool isexist(char name[]);
+extern bool isFuncExist(char name[]);
+extern int FindTypeByName(char tname[]);
+extern int FindIdByName(char funname[]);
 
 int curfunc;
 
@@ -23,7 +26,7 @@ void inputStatement();//8.输入语句
 void outputStatement();//9.输出语句
 void assignment();//10.赋值语句
 void functioncall();//11.函数调用语句
-void passparameter();//12.传递参数
+void passparameter(char []);//12.传递参数
 void switchStatement();//13.分支语句
 void loopStatement();//14.循环语句
 void expression();//15.表达式  ！！
@@ -76,14 +79,17 @@ void func(){
 		error(49);
 	}
 	//添加函数声明表
+	comtabs.back().type = FUN;
 
 	funtabs.push_back(funtab(funname));
 	//current function = funtabs.size()-1;
-	curfunc = funtabs.size() - 1;
+	curfunc = funtabs.size();
 
 	parameter();
 
 	statementlists();
+
+	curfunc = 0;
 
 	match(end);
 	
@@ -110,7 +116,7 @@ void parameter(){
 		int tmptype = datatype();
 		comtabs.back().type = tmptype;
 		comtabs.back().funid = curfunc;
-		funtabs.back().para.push_back(tmptype);
+		funtabs.back().para.push_back(tmptype); //函数表中添加形参类型
 		
 		while (lookahead == comma){
 			
@@ -292,6 +298,7 @@ void assignment(){
 	if (!isexist(token)){
 		error(46);
 	}
+	
 	match(equl);
 	expression();
 }
@@ -299,25 +306,62 @@ void assignment(){
 //11.<函数调用语句>—> call id (  <传递参数>  ) ；
 void functioncall(){
 	match(call);
+	char funname[MAXIDLEN];
+	strcpy(funname, token);
+
 	match(id);  //函数名
+	if (!isFuncExist(funname)){//函数是否存在
+		strcpy(token, funname);
+		error(48);
+	}
+	
 	match(LP);
-	passparameter();
+	passparameter(funname);
 	match(RP);
 	match(semicolon);
 }
 
 //12.<传递参数>—> id [ ,  id ]| ε
-void passparameter(){
-	if (match(id)){
+void passparameter(char funname[]){
+	vector<int> tmptypes;//实参类型序列
+	char varname[MAXIDLEN];
+	strcpy(varname, token);
+
+	if (lookahead==id){
+		match(id);
+		if (!isexist(varname)){
+			strcpy(token, varname);
+			error(46);
+		}
+
+		int tmptype = FindTypeByName(varname);
+
+		tmptypes.push_back(tmptype);
+
 		while (lookahead == comma){
 			match(comma);
 
-			char varname[MAXIDLEN];
 			strcpy(varname, token);
+			
 			match(id);
+
 			if (!isexist(varname)){
 				strcpy(token, varname);
 				error(46);
+			}
+
+			tmptype = FindTypeByName(varname);
+			tmptypes.push_back(tmptype);
+		}
+		int callfuncId = FindIdByName(funname);
+		if (tmptypes.size() != funtabs[callfuncId].para.size()){
+			error(51);
+		}
+		else{
+			for (int i = 0; i < tmptypes.size(); i++){
+				if (tmptypes[i] != funtabs[callfuncId].para[i]){
+					error(52);
+				}
 			}
 		}
 	}
