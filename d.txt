@@ -1,0 +1,9 @@
+sub func2
+	begin
+	var a ,b as integer;,
+	if a <= b+a
+	then 
+		while a>b do a = 1;
+	else b = a-a;
+	end
+end sub

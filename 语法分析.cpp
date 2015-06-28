@@ -395,37 +395,50 @@ void passparameter(char funname[]){
 void switchStatement(){
 	if (lookahead == IF){
 		match(IF);
-		booleaexpression();//真假出口
+		TFexit tf = booleaexpression();//真假出口
 		match(THEN);
 		//填真出口
+		BackPatch(tf.TC, sno);
+
 		statementlists();
 		
 		if (lookahead == ELSE){
 			// 1 无条件跳转
+			int j = sno;
+			quadruples.push_back(Quadruple(sno++, 0,Val(),Val()));
 			match(ELSE);
-			//填假出口
+			//回填假出口
+			BackPatch(tf.FC, sno);
 			statementlists();
 			//回填 1 无条件跳转
+			BackPatch(j, sno);
 		}
 		else {
 			// 回填假出口
+			BackPatch(tf.FC, sno);
 		}
 	}
 	else{
 		error(24);
 	}
-}
+ }
 
 //14.<循环语句>—> while  <布尔表达式> do <语句>
 void loopStatement(){
 	match(WHILE);
 	//int boolId = 序号全局变量
-	booleaexpression();//真假出口
+	int boolId = sno;
+	TFexit tf = booleaexpression();//真假出口
+
 	match(DO);
 	//回填真出口
+	BackPatch(tf.TC, sno);
+
 	statementlists();
 	//(j boolId)
+	quadruples.push_back(Quadruple(sno++, 0, Val(), Val(), boolId));
 	//回填假出口
+	BackPatch(tf.FC, sno);
 }
 
 //15.<表达式>—> <项> [ +|－ <项> ]
@@ -540,30 +553,42 @@ Val Factor(){
 
 //18.<布尔表达式>—> <关系表达式> [ and | or  <布尔表达式> ]
 TFexit booleaexpression(){
-	TFexit tf = TFexit();//指向当前真假出口
 	TFexit reexit = relationexpression();//1 关系表达式
-	
+	TFexit tf = reexit;//指向当前真假出口
 	while (lookahead == and || lookahead==or){
 		if (lookahead == and){
 			match(and);
-			//关系表达式 1 和 整个布尔表达式 的假出口相同
 			//关系表达式 1 的真出口确定
-			merge(tf.FC, reexit.FC);
-			tf.FC = reexit.FC;
-			reexit.TC = sno;
+			quadruples[reexit.TC].result = sno;
 
-			booleaexpression();
-			//返回真假出口
+			TFexit tmp = booleaexpression();
+			
+			//TFexit tmp = relationexpression();
+
+			//quadruples[tmp.TC].result = sno;
+			tf.FC = merge(tmp.FC, tf.FC);
+			tf.TC = tmp.TC;//唯一的一个真出口
+			//合并真/假出口
 			return tf;
 		}
 		else if (lookahead == or){
 			match(or);
-			//关系表达式 1 和 整个布尔表达式 的真出口相同
-			booleaexpression();
+			//关系表达式 1 的假出口确定
+			quadruples[reexit.FC].result = sno;
+
+			TFexit tmp = booleaexpression();
+
+			//TFexit tmp = relationexpression();
+
+			//quadruples[tmp.FC].result = sno;
+			tf.TC = merge(tmp.TC, tf.TC);
+			tf.FC = tmp.FC;//唯一的一个假出口
 			//返回真假出口
 			return tf;
 		}
 	}
+
+	return tf;
 }
 
 //19. <关系表达式>—> <表达式> <关系> <表达式>

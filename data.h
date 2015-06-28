@@ -73,11 +73,9 @@ struct comtab{			//符号表
 	char name[MAXIDLEN + 1];
 	int type;//数据类型
 	int funid;//第几个函数
-	//bool used;
 	comtab(char s[], int f){
 		strcpy(name, s);
 		funid = f;
-		//used = true;
 	}
 };
 

@@ -20,6 +20,7 @@ int col = 0, row = 1;
 
 extern void advance();
 extern void program();
+extern void PrintQuadruple(Quadruple q);//输出一条四元式
 
 void main()
 {
@@ -44,6 +45,9 @@ void main()
 
 	}
 	else{
+		for (int i = 1; i < quadruples.size(); i++){
+			PrintQuadruple(quadruples[i]);
+		}
 		printf("\n分析成功！\n");
 	}
 
