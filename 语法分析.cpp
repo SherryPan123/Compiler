@@ -12,8 +12,12 @@ extern bool isexist(char name[]);
 extern bool isFuncExist(char name[]);
 extern int FindTypeByName(char tname[]);
 extern int FindIdByName(char funname[]);
+extern char* GetNameByID(int index);//通过变量id找到名字
+extern int GetIdByName(char varname[]);//通过变量名字找到id
 
-int curfunc;
+int curfunc;					//当前函数序号
+int sno = 0;                    //四元式序号
+int temp = 0;                   //临时变量序号
 
 void program();//1.程序  
 void func();//2.过程   +fun
@@ -29,9 +33,9 @@ void functioncall();//11.函数调用语句
 void passparameter(char []);//12.传递参数
 void switchStatement();//13.分支语句
 void loopStatement();//14.循环语句
-void expression();//15.表达式  ！！
-void Item();//16.项
-void Factor();//17.因子
+Val expression();//15.表达式  ！！
+Val Item();//16.项
+Val Factor();//17.因子
 void booleaexpression();//18.布尔表达式
 void relationexpression();//19.关系表达式
 void relation();//20.关系
@@ -294,13 +298,27 @@ void outputStatement(){
 
 //10.<赋值语句>—> id  =  <表达式> ；
 void assignment(){
+	char varname[MAXIDLEN];
+	strcpy(varname, token);
+
 	match(id);
-	if (!isexist(token)){
+	if (!isexist(varname)){
+		strcpy(token, varname);
 		error(46);
 	}
 	
 	match(equl);
-	expression();
+	Val v = expression();
+
+	match(semicolon);
+
+	//生成四元式
+	printf("%3d （=，", sno++);
+	if (v.type == 1) printf("%s", GetNameByID(v.value1));
+	else if (v.type == 0) printf("%d", v.value1);
+	else if (v.type == 2) printf("%lf", v.value2);
+	else printf("t%d", v.value1);
+	printf("，%s）\n", varname);
 }
 
 //11.<函数调用语句>—> call id (  <传递参数>  ) ；
@@ -372,12 +390,20 @@ void passparameter(char funname[]){
 void switchStatement(){
 	if (lookahead == IF){
 		match(IF);
-		booleaexpression();
+		booleaexpression();//真假出口
 		match(THEN);
+		//填真出口
 		statementlists();
+		
 		if (lookahead == ELSE){
+			// 1 无条件跳转
 			match(ELSE);
+			//填假出口
 			statementlists();
+			//回填 1 无条件跳转
+		}
+		else {
+			// 回填假出口
 		}
 	}
 	else{
@@ -388,34 +414,84 @@ void switchStatement(){
 //14.<循环语句>—> while  <布尔表达式> do <语句>
 void loopStatement(){
 	match(WHILE);
-	booleaexpression();
+	//int boolId = 序号全局变量
+	booleaexpression();//真假出口
 	match(DO);
+	//回填真出口
 	statementlists();
+	//(j boolId)
+	//回填假出口
 }
 
 //15.<表达式>—> <项> [ +|－ <项> ]
-void expression(){
-	Item();
+Val expression(){
+	Val v1 = Item();
 	while (lookahead == plus || lookahead == minus){
+		int op = lookahead;
+
 		if (lookahead == plus) match(plus);
 		else match(minus);
-		Item();
+		Val v2 = Item();
+
+		//生成四元式
+		printf("%3d （%c，", sno++, op == plus ? '+' : '-');
+
+		if (v1.type == 1) printf("%s", GetNameByID(v1.value1));
+		else if (v1.type == 0)  printf("%d", v1.value1);
+		else if (v1.type == 2) printf("%lf", v1.value2);
+		else printf("t%d", v1.value1);
+		printf("，");
+		if (v2.type == 1) printf("%s", GetNameByID(v2.value1));
+		else if (v2.type == 0) printf("%d", v2.value1);
+		else if (v2.type == 2) printf("%lf", v2.value2);
+		else printf("t%d", v2.value1);
+		printf("，t%d）\n", temp);
+
+		v1.type = -1;
+		v1.value1 = temp++;
+
 	}
+	return v1;
 }
 
 //16.<项>—> <因子> [ *|/  <因子> ]
-void Item(){
-	Factor();
+Val Item(){
+	Val v1 = Factor();
+
 	while (lookahead == mutiply || lookahead == div){
-		if (lookahead == mutiply) match(mutiply);
+		int op = lookahead;
+		if (op == mutiply) match(mutiply);
 		else match(div);
-		Factor();
+		Val v2 = Factor();
+
+		//生成四元式
+		printf("%3d （%c，", sno++, op == mutiply ? '*' : '/');
+		
+		if (v1.type == 1) printf("%s", GetNameByID(v1.value1));
+		else if (v1.type == 0)  printf("%d", v1.value1);
+		else if (v1.type == 2) printf("%lf", v1.value2);
+		else printf("t%d", v1.value1);
+		printf("，");
+		if (v2.type == 1) printf("%s", GetNameByID(v2.value1));
+		else if (v2.type == 0) printf("%d", v2.value1);
+		else if (v2.type == 2) printf("%lf", v2.value2);
+		else printf("t%d", v2.value1);
+		printf("，t%d）\n", temp);
+
+		v1.type = -1;
+		v1.value1 = temp++;
+
 	}
+	return v1;
 }
 
 //17.<因子>—> id | con | deci | (<表达式>)
-void Factor(){
+Val Factor(){
+	Val val;
 	if (lookahead == id){
+		
+		val.type = 1;//变量
+		
 		char varname[MAXIDLEN];
 		strcpy(varname, token);
 		match(id);
@@ -423,36 +499,53 @@ void Factor(){
 			strcpy(token, varname);
 			error(46);
 		}
+		val.value1 = GetIdByName(varname);
 	}
 	else if (lookahead == con){
+		
+		val.type = 0;//整数
+		val.value1 = atoi(token);
+
 		match(con);
 	}
 	else if (lookahead == deci){
+
+		val.type = 2;//小数
+		val.value2 = atof(token);
+
 		match(deci);
 	}
 	else if (lookahead == LP){
 		match(LP);
 
-		expression();
+		val = expression();
 		
 		match(RP);
+
+		
 	}
 	else {
 		error(24);
 	}
+	return val;
 }
 
 //18.<布尔表达式>—> <关系表达式> [ and | or  <布尔表达式> ]
 void booleaexpression(){
-	relationexpression();
+	relationexpression();//1 关系表达式
 	while (lookahead == and || lookahead==or){
 		if (lookahead == and){
 			match(and);
+			//关系表达式 1 和 整个布尔表达式 的假出口相同
+			//关系表达式 1 的真出口确定
 			booleaexpression();
+			//返回真假出口
 		}
 		else if (lookahead == or){
 			match(or);
+			//关系表达式 1 和 整个布尔表达式 的真出口相同
 			booleaexpression();
+			//返回真假出口
 		}
 	}
 }

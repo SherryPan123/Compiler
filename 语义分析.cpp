@@ -61,3 +61,16 @@ int FindIdByName(char funname[]){
 		}
 	}
 }
+
+int GetIdByName(char varname[]){
+	for (int i = 0; i < comtabs.size(); i++){
+		if (strcmp(comtabs[i].name, varname) == 0 && comtabs[i].funid == curfunc) {
+			return i;
+		}
+	}
+}
+
+char* GetNameByID(int index)
+{
+	return comtabs[index].name;
+}

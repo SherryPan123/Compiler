@@ -1,15 +1,17 @@
-sub func2(a as integer)
+sub func2
 end sub
 sub func1 (a as integer,c as float,b as integer)
 	if a<b 
 	then 
 		begin
 			var asdf, func11 as integer;,
+			func11 = 1;,
+			asdf = func11 + (func11 - 9.8/9)+1*3.5;,
 			while asdf > 34 do
 				begin
 					var xxx as float;,
 					while xxx==c do
-						call func2 (xxx);
+						call func2 ();
 				end
 		end
 	else
@@ -18,5 +20,5 @@ sub func1 (a as integer,c as float,b as integer)
 			input ccc,ccc;
 		end
 end sub
-sub func1()
-end sub
+//sub func11()
+//end sub

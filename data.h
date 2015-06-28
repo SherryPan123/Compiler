@@ -82,7 +82,7 @@ struct comtab{			//符号表
 };
 
 
-struct Val{					//
+struct Val{					//返回类型
 	int value1;
 	double value2;
 	int  type;  // 1：表示value中保存的是标识符在符号表中的索引；
@@ -95,7 +95,6 @@ struct funtab{		//函数声明表
 	char name[MAXIDLEN + 1]; //函数名
 	int paranum;	//参数个数
 	vector<int> para;//参数类型
-	//int returnval;//返回值类型
 	funtab(char tname[]){
 		strcpy(name, tname);
 	}
