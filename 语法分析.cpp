@@ -5,6 +5,7 @@ extern char* err_msg[];
 
 extern vector<comtab> comtabs; //变量表
 extern vector<funtab> funtabs; //函数表
+extern vector<Quadruple> quadruples;//四元式序列表
 
 extern char token[];
 extern bool enter(char name[]);
@@ -14,9 +15,11 @@ extern int FindTypeByName(char tname[]);
 extern int FindIdByName(char funname[]);
 extern char* GetNameByID(int index);//通过变量id找到名字
 extern int GetIdByName(char varname[]);//通过变量名字找到id
+extern void BackPatch(int p, int t);
+extern int merge(int p1, int p2);
 
+int sno = 1;					//当前四元式序号
 int curfunc;					//当前函数序号
-int sno = 0;                    //四元式序号
 int temp = 0;                   //临时变量序号
 
 void program();//1.程序  
@@ -36,9 +39,9 @@ void loopStatement();//14.循环语句
 Val expression();//15.表达式  ！！
 Val Item();//16.项
 Val Factor();//17.因子
-void booleaexpression();//18.布尔表达式
-void relationexpression();//19.关系表达式
-void relation();//20.关系
+TFexit booleaexpression();//18.布尔表达式
+TFexit relationexpression();//19.关系表达式
+int relation();//20.关系
 
 extern void error(int n);
 
@@ -300,6 +303,7 @@ void outputStatement(){
 void assignment(){
 	char varname[MAXIDLEN];
 	strcpy(varname, token);
+	Val v2 = Val(1, GetIdByName(varname));
 
 	match(id);
 	if (!isexist(varname)){
@@ -312,13 +316,14 @@ void assignment(){
 
 	match(semicolon);
 
+	quadruples.push_back(Quadruple(sno++, equl, v, v2));
 	//生成四元式
-	printf("%3d （=，", sno++);
+	/*printf("%3d （=，", sno++);
 	if (v.type == 1) printf("%s", GetNameByID(v.value1));
 	else if (v.type == 0) printf("%d", v.value1);
 	else if (v.type == 2) printf("%lf", v.value2);
 	else printf("t%d", v.value1);
-	printf("，%s）\n", varname);
+	printf("，%s）\n", varname);*/
 }
 
 //11.<函数调用语句>—> call id (  <传递参数>  ) ；
@@ -433,8 +438,9 @@ Val expression(){
 		else match(minus);
 		Val v2 = Item();
 
+		quadruples.push_back(Quadruple(sno++, op == plus ? plus : minus, v1,v2,temp));
 		//生成四元式
-		printf("%3d （%c，", sno++, op == plus ? '+' : '-');
+		/*printf("%3d （%c，", sno++, op == plus ? '+' : '-');
 
 		if (v1.type == 1) printf("%s", GetNameByID(v1.value1));
 		else if (v1.type == 0)  printf("%d", v1.value1);
@@ -445,7 +451,7 @@ Val expression(){
 		else if (v2.type == 0) printf("%d", v2.value1);
 		else if (v2.type == 2) printf("%lf", v2.value2);
 		else printf("t%d", v2.value1);
-		printf("，t%d）\n", temp);
+		printf("，t%d）\n", temp);*/
 
 		v1.type = -1;
 		v1.value1 = temp++;
@@ -464,8 +470,10 @@ Val Item(){
 		else match(div);
 		Val v2 = Factor();
 
+
+		quadruples.push_back(Quadruple(sno++, op == mutiply ? mutiply : div, v1, v2, temp));
 		//生成四元式
-		printf("%3d （%c，", sno++, op == mutiply ? '*' : '/');
+		/*printf("%3d （%c，", sno++, op == mutiply ? '*' : '/');
 		
 		if (v1.type == 1) printf("%s", GetNameByID(v1.value1));
 		else if (v1.type == 0)  printf("%d", v1.value1);
@@ -476,7 +484,7 @@ Val Item(){
 		else if (v2.type == 0) printf("%d", v2.value1);
 		else if (v2.type == 2) printf("%lf", v2.value2);
 		else printf("t%d", v2.value1);
-		printf("，t%d）\n", temp);
+		printf("，t%d）\n", temp);*/
 
 		v1.type = -1;
 		v1.value1 = temp++;
@@ -531,53 +539,71 @@ Val Factor(){
 }
 
 //18.<布尔表达式>—> <关系表达式> [ and | or  <布尔表达式> ]
-void booleaexpression(){
-	relationexpression();//1 关系表达式
+TFexit booleaexpression(){
+	TFexit tf = TFexit();//指向当前真假出口
+	TFexit reexit = relationexpression();//1 关系表达式
+	
 	while (lookahead == and || lookahead==or){
 		if (lookahead == and){
 			match(and);
 			//关系表达式 1 和 整个布尔表达式 的假出口相同
 			//关系表达式 1 的真出口确定
+			merge(tf.FC, reexit.FC);
+			tf.FC = reexit.FC;
+			reexit.TC = sno;
+
 			booleaexpression();
 			//返回真假出口
+			return tf;
 		}
 		else if (lookahead == or){
 			match(or);
 			//关系表达式 1 和 整个布尔表达式 的真出口相同
 			booleaexpression();
 			//返回真假出口
+			return tf;
 		}
 	}
 }
 
 //19. <关系表达式>—> <表达式> <关系> <表达式>
-void relationexpression(){
-	expression();
-	relation();
-	expression();
+TFexit relationexpression(){
+	Val v1 = expression();
+	int re = relation();
+	Val v2 = expression();
+	quadruples.push_back(Quadruple(sno++, re, v1, v2));
+	quadruples.push_back(Quadruple(sno++,0,Val(),Val()));//无条件跳转op=0
+	return TFexit(sno - 2, sno - 1);
 }
 
 //20. <关系>—> < | <= | > | >= | == | <>
-void relation(){
+int relation(){
 	if (lookahead == lessthan){
 		match(lessthan);
+		return lessthan;
 	}
 	else if (lookahead == lessequl){
 		match(lessequl);
+		return lessequl;
 	}
 	else if (lookahead == morethan){
 		match(morethan);
+		return morethan;
 	}
 	else if (lookahead == moreequl){
 		match(moreequl);
+		return moreequl;
 	}
 	else if (lookahead == equlequl){
 		match(equlequl);
+		return equlequl;
 	}
 	else if (lookahead == notequl){
 		match(notequl);
+		return notequl;
 	}
 	else {
 		error(24);
+		return ERROR;
 	}
 }

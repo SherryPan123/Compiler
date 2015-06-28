@@ -9,6 +9,7 @@ char Boolop[2][5] = { "and", "or" };
 
 vector<comtab> comtabs; //变量表
 vector<funtab> funtabs; //函数表
+vector<Quadruple> quadruples;//四元式序列表
 
 FILE * fin;
 int isright;
@@ -33,6 +34,7 @@ void main()
 	}
 
 	isright = 1;                                 //识别结果 
+	quadruples.push_back(Quadruple());
 	advance();
 
 	program();

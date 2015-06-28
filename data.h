@@ -89,6 +89,8 @@ struct Val{					//返回类型
 	// 0：表示value中保存的是整数值；
 	//2：表示value中保存的是小数
 	//-1：表示value中保存的是临时变量序号；
+	Val(){}
+	Val(int _type, int v1) :type(_type), value1(v1){}
 };
 
 struct funtab{		//函数声明表
@@ -98,4 +100,22 @@ struct funtab{		//函数声明表
 	funtab(char tname[]){
 		strcpy(name, tname);
 	}
+};
+
+struct Quadruple{	//四元式序列表
+	int ID;
+	int op; 
+	Val arg1;
+	Val arg2;
+	int result;
+	Quadruple(int _ID,int _op, Val _arg1, Val _arg2, int _result=0):ID(_ID), op(_op),arg1(_arg1),arg2(_arg2),result(_result){}
+	Quadruple(){
+		result = 0;
+	}
+};
+
+struct TFexit{
+	int TC;
+	int FC;
+	TFexit(int _TC=0, int _FC=0):TC(_TC),FC(_FC){}
 };
